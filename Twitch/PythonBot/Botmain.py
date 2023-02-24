@@ -2,6 +2,9 @@
 # -*- coding: UTF-8 -*-
 #!/bin/sh
 
+# Accidentally deleted the other project files so this is what i have left
+# Also this code is ancient and a lot of it is very bad.
+
 import re
 import site
 import threading
