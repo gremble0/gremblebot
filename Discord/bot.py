@@ -1,44 +1,36 @@
 import discord
-import commands
+import datetime
+from commands import handle_command
 
-async def send_message(message):
-    try:
-        response = commands.handle_command(message.content)
-        await message.channel.send(response)
-
-    except Exception as e:
-        print(e)
-        
-
-def run_discord_bot():
+def run_bot():
 	commands = [
 		"!ping",
-		"!roll",
-		"!help"
+		"!play"
 	]
 
-	TOKEN = ""
+	TOKEN = "" 
 	intents = discord.Intents.default()
 	intents.message_content = True
 	client = discord.Client(intents=intents)
 
 	@client.event
 	async def on_ready():
-		print(f'{client.user} is now running!')
+		print(f'{client.user} is running')
 
 	@client.event
 	async def on_message(message):
 		if message.author == client.user:
 			return
 
-		#voice_client = discord.VoiceClient(client, message.channel)
-		sender = str(message.author)
-		content = message.content
-		channel = str(message.channel)
+		now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
+		print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
-		print(f"#{channel}, {sender}: {content}")
-		
-		if content.split()[0] in commands:
-			await send_message(message)
+		if message.content.split()[0] in commands:
+			try:
+				response = handle_command(client, message)
+				await message.channel.send(response)
+			except Exception as e:
+				print("ERROOREROOOROEOOERORORORRRRR")
+				print(e)
 
 	client.run(TOKEN)

@@ -1,12 +1,11 @@
 import random
+import discord
 
-def handle_command(message) -> str:
-    p_message = message.lower()
-    if p_message == '!ping':
-        return 'pong!'
+def handle_command(client, message):
+	#voice_client = discord.VoiceClient(client, message.channel)
 
-    if p_message == '!roll':
-        return str(random.randint(1, 6))
-
-    if p_message == '!help':
-        return "Useless bot xd" 
+	if content == "!ping":
+		return "pong!"
+	
+	if content == "!play":
+		return "asd"	
