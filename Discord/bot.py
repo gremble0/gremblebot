@@ -1,5 +1,6 @@
 import discord
 import datetime
+import secrets
 from commands import handle_command
 
 def run_bot():
@@ -8,7 +9,7 @@ def run_bot():
 		"!play"
 	]
 
-	TOKEN = "" 
+	TOKEN = secrets.DISCORD_TOKEN
 	intents = discord.Intents.default()
 	intents.message_content = True
 	client = discord.Client(intents=intents)
