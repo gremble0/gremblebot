@@ -28,10 +28,12 @@ def run_bot():
 
 		if message.content.split()[0] in commands:
 			try:
-				response = handle_command(client, message)
+				response = await handle_command(client, message)
 				await message.channel.send(response)
 			except Exception as e:
-				print("ERROOREROOOROEOOERORORORRRRR")
-				print(e)
+				print("ERROOREROOOROEOOERORORORRRRR\n" + e)
 
 	client.run(TOKEN)
+
+if __name__ == "__main__":
+	run_bot()
