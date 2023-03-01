@@ -1,10 +1,11 @@
 import discord
 import datetime
 import secrets
+from playlist import Playlist
 from commands import handle_command
 
 def run_bot():
-	commands = [
+	COMMANDS = [
 		"!ping",
 		"!play"
 	]
@@ -12,6 +13,7 @@ def run_bot():
 	intents = discord.Intents.default()
 	intents.message_content = True
 	client = discord.Client(intents=intents)
+	playlist = Playlist(client) # for !play command
 
 	@client.event
 	async def on_ready():
@@ -25,9 +27,9 @@ def run_bot():
 		now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
 		print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
-		if message.content.split()[0] in commands:
+		if message.content.split()[0] in COMMANDS:
 			try:
-				response = await handle_command(client, message)
+				response = await handle_command(client, message, playlist)
 				await message.channel.send(response)
 			except Exception as e:
 				print("ERROOREROOOROEOOERORORORRRRR\n", e)
