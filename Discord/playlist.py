@@ -20,5 +20,3 @@ class Playlist:
 		#os.rename(video_title, video_title + ".mp3")
 		
 		return discord.file(open(video_title, "rb"))
-		#voice_client = discord.VoiceChannel.connect()
-		#discord.VoiceChannel.send(file=discord.File(open(video_title + ".mp3", "rb")))
