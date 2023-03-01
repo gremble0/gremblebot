@@ -1,26 +1,21 @@
 import random
 import discord
 import secrets
-from pytube import YouTube
+from pytube import YouTube, Search
 from googleapiclient.discovery import build
 
 async def handle_command(client, message):
 	#voice_client = discord.VoiceClient(client, message.channel)
+	message_split = message.content.split()
 
-	if message.content == "!ping":
+	if message_split[0] == "!ping":
 		return "pong!"
 	
-	if message.content == "!play":
-		youtube_client = build("youtube", "v3", developerKey=secrets.YOUTUBE_API_KEY)
-		request = youtube_client.search().list(
-			part = "snippet",
-			q = "eminem lose yourself"
-		)
-		response = request.execute()
+	if message_split[0] == "!play":
+		if len(message_split) < 2:
+			return "Please enter a video title"
 
-		#YouTube("https://youtu.be/"+response["items"][0]["id"]["videoId"], use_oauth=True).streams.get_highest_resolution().download() # download first video in http response
-		for video in response["items"]: # !! very slow !!
-			video_id = video["id"]["videoId"]
-			YouTube("https://youtu.be/"+video_id, use_oauth=True).streams.get_highest_resolution().download()
+		yt = Search(" ".join(message_split[1:])).results
+		yt[0].streams.get_audio_only().download(output_path="media/")
 
 		return "asd"
