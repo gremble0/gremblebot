@@ -9,7 +9,6 @@ def run_bot():
 		"!play"
 	]
 
-	TOKEN = secrets.DISCORD_TOKEN
 	intents = discord.Intents.default()
 	intents.message_content = True
 	client = discord.Client(intents=intents)
@@ -31,9 +30,9 @@ def run_bot():
 				response = await handle_command(client, message)
 				await message.channel.send(response)
 			except Exception as e:
-				print("ERROOREROOOROEOOERORORORRRRR\n" + e)
+				print("ERROOREROOOROEOOERORORORRRRR\n", e)
 
-	client.run(TOKEN)
+	client.run(secrets.DISCORD_TOKEN)
 
 if __name__ == "__main__":
 	run_bot()
