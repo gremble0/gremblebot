@@ -2,8 +2,7 @@
 import datetime
 import secrets
 import discord
-from playlist import Playlist
-from commands import handle_command
+
 
 def run_bot():
     """Main method for running bot"""
