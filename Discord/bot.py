@@ -10,7 +10,7 @@ def run_bot():
     """Main method for running bot"""
     commands = [
         "!ping",
-		"!play"
+        "!play"
 	]
 
     intents = discord.Intents.default()
@@ -31,11 +31,8 @@ def run_bot():
         print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
         if message.content.split()[0] in commands:
-            try:
-                response = await handle_command(message, playlist)
-                await message.channel.send(response)
-            except Exception as err:
-                print("ERROOREROOOROEOOERORORORRRRR\n", err)
+            response = await handle_command(message, playlist)
+            await message.channel.send(response)
 
     client.run(secrets.DISCORD_TOKEN)
 
