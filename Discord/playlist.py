@@ -4,22 +4,22 @@ import discord
 
 class Playlist:
     """Class for keeping track of songs queued by !play command"""
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         self.queue = []
         self.client = client
 
-    def pop(self):
+    def pop(self) -> None:
         """Removes song from start of queue"""
         self.queue.pop(0)
 
-    def insert(self, yt_obj):
+    def insert(self, yt_obj) -> None:
         """Append song to end of queue"""
         self.queue.append(yt_obj)
 
-    def play(self):
+    def play(self) -> discord.File:
         """Download and return discord file object of first song in queue"""
         yt_obj = self.queue[0]
-        stream = yt_obj.streams.get_lowest_resolution()
+        stream = yt_obj.streams.get_lowest_resolution() # get_audio_only() doesnt work
         video_title = stream.download(output_path="media/")
         #os.rename(video_title, video_title + ".mp3")
 
