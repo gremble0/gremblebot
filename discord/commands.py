@@ -1,6 +1,6 @@
 """File for handling user input/commands"""
 import ctypes
-from pytube import Search
+import yt_dlp as youtube_dl
 import discord
 
 async def handle_command(message, playlist):
@@ -17,16 +17,28 @@ async def handle_command(message, playlist):
         if len(playlist.queue) >= 10:
             return "Queue full"
 
-        # yt_obj contains first YouTube object in SearchQuery object
-        yt_obj = Search(" ".join(message_split[1:])).results[0]
-        playlist.insert(yt_obj)
-        stream = yt_obj.streams.get_lowest_resolution() # get_audio_only() doesnt work
-        video_title = stream.download(output_path="media/")
+        video_url = search(" ".join(message_split[1:]))
+        video_info = youtube_dl.YoutubeDL().extract_info(url = video_url, download= False)
+        filename = f"{video_info['title']}.mp3"
+        options = {
+            "format": "bestaudio/best",
+            "keepvideo": False,
+            "outtmpl": filename
+        }
 
-        #source = discord.FFmpegAudio(j
-        source = discord.PCMAudio(open(video_title, "rb"))
-        #source = await discord.FFmpegOpusAudio.from_probe(video_title, method="fallback")
+        with youtube_dl.YoutubeDL(options) as ydl:
+            ydl.download([video_info["webpage_url"]])
+
+        source = await discord.FFmpegOpusAudio.from_probe(filename)
         voice_client = await message.author.voice.channel.connect()
+        # try except ClientException for queueing??
         voice_client.play(source)
 
-        return f"Added {yt_obj.title} to the queue."
+        return f"Added {filename} to the queue."
+
+def search(arg) -> str:
+    """Searches youtube for video based on arg. Returns string of video url"""
+    ydl_options = {"format": "bestaudio", "noplaylist": "True"}
+    ydl = youtube_dl.YoutubeDL(ydl_options)
+    video = ydl.extract_info(f"ytsearch:{arg}", download=False)["entries"][0]
+    return "youtube.com/watch?v=" + video["id"]
