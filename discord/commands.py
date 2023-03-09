@@ -10,6 +10,9 @@ async def handle_command(message, playlist):
     if message_split[0] == "!ping":
         return "pong!"
 
+    if message_split[0] == "!stop":
+        return "shutting down..."
+
     if message_split[0] == "!play":
         discord.opus.load_opus(ctypes.util.find_library("opus"))
         if len(message_split) < 2:
@@ -41,4 +44,5 @@ def search(arg) -> str:
     ydl_options = {"format": "bestaudio", "noplaylist": "True"}
     ydl = youtube_dl.YoutubeDL(ydl_options)
     video = ydl.extract_info(f"ytsearch:{arg}", download=False)["entries"][0]
+
     return "youtube.com/watch?v=" + video["id"]
