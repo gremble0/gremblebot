@@ -3,24 +3,63 @@ import ctypes
 import yt_dlp as youtube_dl
 import discord
 
-async def handle_command(message, playlist):
-    """Handles commands and returns string to be sent in text channel"""
-    message_split = message.content.split()
+class CommandHandler:
+    """
+    Class for handling user input containing all the bots commands
 
-    if message_split[0] == "!ping":
-        return "pong!"
+    Attributes
+    ----------
+    bot : Bot()
+        pointer to Bot object running the program
+        necessary for some commands
+    message : discord.Message
+        pointer to discord.Message variable containing
+        information necessary for processing the current command
 
-    if message_split[0] == "!stop":
-        return "shutting down..."
+    Methods
+    -------
+    handle_command():
+        redirects to appropriate command based on user input
+    """
 
-    if message_split[0] == "!play":
+
+    def __init__(self, bot):
+        self.message = None
+        self.bot = bot
+
+
+    async def handle_command(self):
+        """
+        Starts coroutine for private method based on the
+        content of the message variable
+        """
+
+        message_split = self.message.content.split()
+        if message_split[0] == "!ping":
+            await self._ping()
+        elif message_split[0] == "!stop":
+            await self._stop()
+        elif message_split[0] == "!play":
+            await self._play()
+
+
+    async def _ping(self):
+        await self.message.channel.send("pong!")
+
+
+    async def _stop(self):
+        await self.message.channel.send("Shutting down...")
+        await self.bot.client.close()
+
+
+    async def _play(self):
         discord.opus.load_opus(ctypes.util.find_library("opus"))
-        if len(message_split) < 2:
-            return "Please enter a video title"
-        if len(playlist.queue) >= 10:
-            return "Queue full"
+        if len(self.message.content.split()) < 2:
+            self.message.channel.send("Please enter a video title")
+        if len(self.bot.playlist.queue) >= 10:
+            self.message.channel.send("Queue is full :(")
 
-        video_url = search(" ".join(message_split[1:]))
+        video_url = self.search(" ".join(self.message.split()[1:]))
         video_info = youtube_dl.YoutubeDL().extract_info(url = video_url, download= False)
         filename = f"{video_info['title']}.mp3"
         options = {
@@ -33,16 +72,23 @@ async def handle_command(message, playlist):
             ydl.download([video_info["webpage_url"]])
 
         source = await discord.FFmpegOpusAudio.from_probe(filename)
-        voice_client = await message.author.voice.channel.connect()
+        voice_client = await self.message.author.voice.channel.connect()
         # try except ClientException for queueing??
         voice_client.play(source)
 
         return f"Added {filename} to the queue."
 
-def search(arg) -> str:
-    """Searches youtube for video based on arg. Returns string of video url"""
-    ydl_options = {"format": "bestaudio", "noplaylist": "True"}
-    ydl = youtube_dl.YoutubeDL(ydl_options)
-    video = ydl.extract_info(f"ytsearch:{arg}", download=False)["entries"][0]
 
-    return "youtube.com/watch?v=" + video["id"]
+    def search(self, search_term) -> str:
+        """
+        Searches youtube for video based on search_term. Returns string of video url
+            Parameters:
+                search_term (str): Video title
+            Returns:
+                video (str): Youtube URL to first search result
+        """
+        ydl_options = {"format": "bestaudio", "noplaylist": "True"}
+        ydl = youtube_dl.YoutubeDL(ydl_options)
+        video = ydl.extract_info(f"ytsearch:{search_term}", download=False)["entries"][0]
+
+        return "youtube.com/watch?v=" + video["id"]
