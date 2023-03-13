@@ -51,9 +51,12 @@ class Bot:
         self.client.run(secrets.DISCORD_TOKEN)
 
 
-    # todo - fix queueing songs in !play
-    #      - remove songs after played
+    # todo:
+    #      - remove songs after they have been played
+    #           - maybe stream instead of download?
     #      - add permissions to !stop
+    #      - fix error after last queued song plays
+    #      - shorten _play method, merge _connect and _play_queue into _play and make _download method
 
 if __name__ == "__main__":
     bot = Bot()
