@@ -2,7 +2,7 @@
 import ctypes
 import yt_dlp as youtube_dl
 import discord
-import playlist
+
 
 class CommandHandler:
     """
@@ -16,6 +16,9 @@ class CommandHandler:
     message : discord.Message
         pointer to discord.Message variable containing
         information necessary for processing the current command
+    playlists : { Int : [discord.FFmpegOpusAudio] }
+        the int is the servers guild id
+        dictionary of each servers queue of songs
 
     Methods
     -------
@@ -27,7 +30,7 @@ class CommandHandler:
     def __init__(self, bot):
         self.message = None
         self.bot = bot
-        self.playlist = playlist.Playlist() # for !play command
+        self.playlists = {} # for !play command
 
 
     async def handle_command(self):
@@ -37,11 +40,11 @@ class CommandHandler:
         """
 
         message_split = self.message.content.split()
-        if message_split[0] == "!ping":
+        if message_split[0] == "%ping":
             await self._ping()
-        elif message_split[0] == "!stop":
+        elif message_split[0] == "%stop":
             await self._stop()
-        elif message_split[0] == "!play":
+        elif message_split[0] == "%play":
             await self._play()
 
 
@@ -64,8 +67,8 @@ class CommandHandler:
         discord.opus.load_opus(ctypes.util.find_library("opus"))
         if len(self.message.content.split()) < 2:
             self.message.channel.send("Please enter a video title")
-        if len(self.playlist.queue) >= 10:
-            self.message.channel.send("Queue is full :(")
+        #if len(self.playlists[self.message.guild.id]) >= 10:
+        #   self.message.channel.send("Queue is full :(")
 
         search_term = " ".join(self.message.content.split()[1:])
         ydl_options = {"format": "bestaudio", "noplaylist": "True"}
@@ -84,11 +87,25 @@ class CommandHandler:
         # downloads audiofile
         youtube_dl.YoutubeDL(options).download([video_info["webpage_url"]])
 
-        #source = await discord.FFmpegOpusAudio.from_probe(filename)
-        self.playlist.insert(await discord.FFmpegOpusAudio.from_probe(filename))
+        source = await discord.FFmpegOpusAudio.from_probe(filename)
+        if self.message.guild.id in self.playlists:
+            self.playlists[self.message.guild.id].append(source)
+        else:
+            self.playlists[self.message.guild.id] = [source]
         await self._connect() # maybe errors if coroutine is slower than next line? hard to recreate
-        self.bot.voice_client.play(self.playlist.play())
-        self.message.channel.send("Added your song to the queue!")
+        await self.message.channel.send(f"Added `{filename.rstrip('.mp3')}` to the queue")
+        
+        if self.bot.voice_client.is_playing():
+            self.playlists[self.message.guild.id].append(source)
+        else:
+            self.bot.voice_client.play(self.playlists[self.message.guild.id].pop(0), after = lambda x = None: self._play_queue())
+
+
+    def _play_queue(self):
+        """Plays songs that are in queue after previous song is done"""
+        if self.playlists:
+            source = self.playlists[self.message.guild.id].pop(0)
+            self.bot.voice_client.play(source, after = lambda x = None: self._play_queue())
 
 
     async def _connect(self):

@@ -22,9 +22,9 @@ class Bot:
 
     def __init__(self):
         self.commands = [
-            "!ping",
-            "!play",
-            "!stop"
+            "%ping",
+            "%play",
+            "%stop"
         ]
         intents = discord.Intents.default()
         intents.message_content = True
@@ -53,6 +53,7 @@ class Bot:
 
     # todo - fix queueing songs in !play
     #      - remove songs after played
+    #      - add permissions to !stop
 
 if __name__ == "__main__":
     bot = Bot()
