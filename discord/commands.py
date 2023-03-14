@@ -4,6 +4,7 @@ import yt_dlp
 import discord
 import os
 
+
 class CommandHandler:
     """
     Class for handling user input containing all the bots commands
@@ -29,7 +30,7 @@ class CommandHandler:
     def __init__(self, bot):
         self.message = None
         self.bot = bot
-        self.playlists = {} # for !play command
+        self.playlists = {} 
 
     async def handle_command(self):
         """
@@ -62,9 +63,9 @@ class CommandHandler:
         discord.opus.load_opus(ctypes.util.find_library("opus"))
         if len(self.message.content.split()) < 2:
             self.message.channel.send("Please enter a video title")
-        #if len(self.playlists[self.message.guild.id]) >= 10:
-        #   self.message.channel.send("Queue is full :(")
-        #   return
+        # if len(self.playlists[self.message.guild.id]) >= 10:
+        #    self.message.channel.send("Queue is full :(")
+        #    return
 
         search_term = " ".join(self.message.content.split()[1:])
         ydl_options = {
@@ -80,11 +81,12 @@ class CommandHandler:
             self.playlists[self.message.guild.id].append(source)
         else:
             self.playlists[self.message.guild.id] = [source]
-        # maybe errors if method is slow or if multiple coroutines run 
+        # maybe errors if method is slow or if multiple coroutines run
         # the same function at once
-        await self._connect() 
-        await self.message.channel.send(f"Added `{filename.rstrip('.webm')}` to the queue")
-        
+        await self._connect()
+        await self.message.channel.send(f"Added `{filename.rstrip('.webm')}` \
+            to the queue")
+
         if self.bot.voice_client.is_playing():
             self.playlists[self.message.guild.id].append(source)
         else:
@@ -94,11 +96,11 @@ class CommandHandler:
 
     def _play_queue(self):
         """Plays songs that are in queue after previous song is done"""
-        if self.playlists:
-            source = self.playlists[self.message.guild.id].pop(0)
-            self.bot.voice_client.play(source,
-                after = lambda x = None: self._play_queue())
-            os.remove(filename)
+        if not self.playlists[self.message.guild.id]:
+            return
+
+        source = self.playlists[self.message.guild.id].pop(0)
+        self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
 
     async def _connect(self):
         """Connects to voice client if not already connected"""

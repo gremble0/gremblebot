@@ -4,10 +4,11 @@ import secrets
 import discord
 from commands import CommandHandler
 
+
 class Bot:
     """
     Main class for running bot
-    
+
     Attributes
     ----------
     commands : str[]
@@ -28,7 +29,7 @@ class Bot:
         ]
         intents = discord.Intents.default()
         intents.message_content = True
-        self.client = discord.Client(intents = intents)
+        self.client = discord.Client(intents=intents)
         self.voice_client = None
         self.command_handler = CommandHandler(self)
 
@@ -38,18 +39,17 @@ class Bot:
                 return
 
             now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
-            print(f"{now} #{message.channel}, {message.author}: {message.content}")
+            print(f"{now} #{message.channel},\
+                {message.author}: {message.content}")
 
             self.command_handler.message = message
             message_split = message.content.split()
             if message_split[0] in self.commands:
                 await self.command_handler.handle_command()
 
-
     def run(self) -> None:
         """Runs bot"""
         self.client.run(secrets.DISCORD_TOKEN)
-
 
     # todo:
     #      - remove songs after they have been played
@@ -57,6 +57,7 @@ class Bot:
     #      - add permissions to !stop
     #      - fix error after last queued song plays
     #      - shorten _play method, merge _connect and _play_queue into _play and make _download method
+
 
 if __name__ == "__main__":
     bot = Bot()
