@@ -25,7 +25,10 @@ class Bot:
         self.commands = [
             "%ping",
             "%play",
-            "%stop"
+            "%stop",
+            "%join",
+            "%connect",
+            "%leave",
         ]
         intents = discord.Intents.default()
         intents.message_content = True
@@ -39,8 +42,7 @@ class Bot:
                 return
 
             now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
-            print(f"{now} #{message.channel},\
-                {message.author}: {message.content}")
+            print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
             self.command_handler.message = message
             message_split = message.content.split()
@@ -53,10 +55,11 @@ class Bot:
 
     # todo:
     #      - remove songs after they have been played
-    #           - maybe stream instead of download?
+    #           - maybe stream instead of download? dont think possible
     #      - add permissions to !stop
-    #      - fix error after last queued song plays
-    #      - shorten _play method, merge _connect and _play_queue into _play and make _download method
+    #      - rename downloaded files to url of video
+    #      - if multiple commands need to download: shorten _play method,
+    #        merge _connect and _play_queue into _play and make _download
 
 
 if __name__ == "__main__":

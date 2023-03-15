@@ -40,22 +40,26 @@ class CommandHandler:
 
         message_split = self.message.content.split()
         if message_split[0] == "%ping":
-            await self._ping()
+            await self.ping()
         elif message_split[0] == "%stop":
-            await self._stop()
+            await self.stop()
         elif message_split[0] == "%play":
-            await self._play()
+            await self.play()
+        elif message_split[0] == "%join" or message_split[0] == "%connect":
+            await self.connect()
+        elif message_split[0] == "%leave":
+            await self.leave()
 
-    async def _ping(self):
+    async def ping(self):
         """Sends pong to channel message was sent from"""
         await self.message.channel.send("pong!")
 
-    async def _stop(self):
+    async def stop(self):
         """Stops bot from running"""
         await self.message.channel.send("Shutting down...")
         await self.bot.client.close()
 
-    async def _play(self):
+    async def play(self):
         """
         Downloads mp3 file from youtube based on message content
         Plays mp3 file through discord voice client
@@ -83,9 +87,8 @@ class CommandHandler:
             self.playlists[self.message.guild.id] = [source]
         # maybe errors if method is slow or if multiple coroutines run
         # the same function at once
-        await self._connect()
-        await self.message.channel.send(f"Added `{filename.rstrip('.webm')}` \
-            to the queue")
+        await self.connect()
+        await self.message.channel.send(f"Added `{filename.rstrip('.webm')}` to the queue")
 
         if self.bot.voice_client.is_playing():
             self.playlists[self.message.guild.id].append(source)
@@ -93,6 +96,17 @@ class CommandHandler:
             self.bot.voice_client.play(self.playlists[self.message.guild.id].pop(0),
                 after = lambda x = None: self._play_queue())
             os.remove(filename)
+
+    async def connect(self):
+        """Connects to voice client if not already connected"""
+        if self.bot.voice_client is None:
+            self.bot.voice_client = await self.message.author.voice.channel.connect()
+
+    async def leave(self):
+        """Leaves if currently connected to a voice channel"""
+        if self.bot.voice_client is not None:
+            await self.bot.voice_client.disconnect(force=True)
+            self.bot.voice_client = None
 
     def _play_queue(self):
         """Plays songs that are in queue after previous song is done"""
@@ -102,7 +116,3 @@ class CommandHandler:
         source = self.playlists[self.message.guild.id].pop(0)
         self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
 
-    async def _connect(self):
-        """Connects to voice client if not already connected"""
-        if self.bot.voice_client is None:
-            self.bot.voice_client = await self.message.author.voice.channel.connect()
