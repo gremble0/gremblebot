@@ -30,7 +30,7 @@ class CommandHandler:
     def __init__(self, bot):
         self.message = None
         self.bot = bot
-        self.playlists = {} 
+        self.playlists = {}
 
     async def handle_command(self):
         """
@@ -75,10 +75,11 @@ class CommandHandler:
         ydl_options = {
             "format": "bestaudio",
             "noplaylist": "True",
+            "outtmpl": "%(id)s.%(ext)s"
         }
         ydl = yt_dlp.YoutubeDL(ydl_options)
         video_info = ydl.extract_info(f"ytsearch:{search_term}")["entries"][0]
-        filename = f"{video_info['title']} [{video_info['id']}].webm"
+        filename = f"{video_info['id']}.webm"
 
         source = await discord.FFmpegOpusAudio.from_probe(filename)
         if self.message.guild.id in self.playlists:
@@ -88,13 +89,13 @@ class CommandHandler:
         # maybe errors if method is slow or if multiple coroutines run
         # the same function at once
         await self.connect()
-        await self.message.channel.send(f"Added `{filename.rstrip('.webm')}` to the queue")
+        await self.message.channel.send(f"Added `{video_info['title']} [{video_info['id']}]` to the queue")
 
         if self.bot.voice_client.is_playing():
             self.playlists[self.message.guild.id].append(source)
         else:
             self.bot.voice_client.play(self.playlists[self.message.guild.id].pop(0),
-                after = lambda x = None: self._play_queue())
+                                       after=lambda x=None: self._play_queue())
             os.remove(filename)
 
     async def connect(self):
