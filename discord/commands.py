@@ -3,6 +3,8 @@ import ctypes
 import yt_dlp
 import discord
 import os
+import requests
+import random
 
 
 class CommandHandler:
@@ -49,6 +51,8 @@ class CommandHandler:
             await self.connect()
         elif message_split[0] == "%leave":
             await self.leave()
+        elif message_split[0] == "%boobs":
+            await self.boobs()
 
     async def ping(self):
         """Sends pong to channel message was sent from"""
@@ -98,6 +102,14 @@ class CommandHandler:
                                        after=lambda x=None: self._play_queue())
             os.remove(filename)
 
+    def _play_queue(self):
+        """Plays songs that are in queue after previous song is done"""
+        if not self.playlists[self.message.guild.id]:
+            return
+
+        source = self.playlists[self.message.guild.id].pop(0)
+        self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
+
     async def connect(self):
         """Connects to voice client if not already connected"""
         if self.bot.voice_client is None:
@@ -109,11 +121,9 @@ class CommandHandler:
             await self.bot.voice_client.disconnect(force=True)
             self.bot.voice_client = None
 
-    def _play_queue(self):
-        """Plays songs that are in queue after previous song is done"""
-        if not self.playlists[self.message.guild.id]:
-            return
-
-        source = self.playlists[self.message.guild.id].pop(0)
-        self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
-
+    async def boobs(self):
+        """Sends nsfw image to current text channel"""
+        url = "https://www.eporner.com/api/v2/video/search/?query=boobs&per_page=1000"
+        response_json = requests.request("GET", url).json()
+        rand_index = random.randint(0, len(response_json["videos"]) - 1)
+        await self.message.channel.send(response_json["videos"][rand_index]["default_thumb"]["src"])

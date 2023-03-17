@@ -29,6 +29,7 @@ class Bot:
             "%join",
             "%connect",
             "%leave",
+            "%boobs",
         ]
         intents = discord.Intents.default()
         intents.message_content = True
