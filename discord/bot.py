@@ -29,6 +29,7 @@ class Bot:
             "%join",
             "%connect",
             "%leave",
+            "%skip",
             "%boobs",
         ]
         intents = discord.Intents.default()
@@ -55,12 +56,13 @@ class Bot:
         self.client.run(secrets.DISCORD_TOKEN)
 
     # todo:
-    #      - remove songs after they have been played
+    #      - remove songs after they have been queued
     #           - maybe stream instead of download? dont think possible
     #      - add permissions to !stop
     #      - rename downloaded files to url of video
     #      - if multiple commands need to download: shorten _play method,
     #        merge _connect and _play_queue into _play and make _download
+    #      - %skip command
 
 
 if __name__ == "__main__":

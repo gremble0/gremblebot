@@ -51,6 +51,8 @@ class CommandHandler:
             await self.connect()
         elif message_split[0] == "%leave":
             await self.leave()
+        elif message_split[0] == "%skip":
+            await self.skip()
         elif message_split[0] == "%boobs":
             await self.boobs()
 
@@ -120,6 +122,12 @@ class CommandHandler:
         if self.bot.voice_client is not None:
             await self.bot.voice_client.disconnect(force=True)
             self.bot.voice_client = None
+
+    async def skip(self):
+        """Skips current song"""
+        if self.bot.voice_client.is_playing():
+            self.bot.voice_client.stop()
+            self._play_queue()
 
     async def boobs(self):
         """Sends nsfw image to current text channel"""
