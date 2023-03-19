@@ -27,6 +27,20 @@ class CommandHandler:
     -------
     handle_command():
         redirects to appropriate private method based on user input
+    ping():
+        sends ping to current chat channel
+    stop():
+        stops bot from running
+    play():
+        downloads and plays audio through voice client
+    join():
+        joins current audio channel
+    leave():
+        leaves current audio channel
+    skip():
+        skips song currently playing
+    boobs():
+        sends picture of boobs
     """
 
     def __init__(self, bot):
@@ -67,15 +81,16 @@ class CommandHandler:
 
     async def play(self):
         """
-        Downloads mp3 file from youtube based on message content
-        Plays mp3 file through discord voice client
+        Downloads audio file from youtube based on message content
+        Plays audio through discord voice client
+        Calls on self._play_queue() after audio is done playing
         """
         discord.opus.load_opus(ctypes.util.find_library("opus"))
         if len(self.message.content.split()) < 2:
             self.message.channel.send("Please enter a video title")
-        # if len(self.playlists[self.message.guild.id]) >= 10:
-        #    self.message.channel.send("Queue is full :(")
-        #    return
+        if len(self.playlists[self.message.guild.id]) >= 10:
+            self.message.channel.send("Queue is full :(")
+            return
 
         search_term = " ".join(self.message.content.split()[1:])
         ydl_options = {
