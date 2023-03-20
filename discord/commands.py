@@ -88,9 +88,6 @@ class CommandHandler:
         discord.opus.load_opus(ctypes.util.find_library("opus"))
         if len(self.message.content.split()) < 2:
             self.message.channel.send("Please enter a video title")
-        if len(self.playlists[self.message.guild.id]) >= 10:
-            self.message.channel.send("Queue is full :(")
-            return
 
         search_term = " ".join(self.message.content.split()[1:])
         ydl_options = {
