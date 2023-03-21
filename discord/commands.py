@@ -119,6 +119,8 @@ class CommandHandler:
     def _play_queue(self):
         """Plays songs that are in queue after previous song is done"""
         if not self.playlists[self.message.guild.id]:
+            self.message.channel.send("No more songs queued. Leaving voice...")
+            self.leave()
             return
 
         source = self.playlists[self.message.guild.id].pop(0)
