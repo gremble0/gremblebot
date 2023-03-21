@@ -133,9 +133,13 @@ class CommandHandler:
 
     async def leave(self):
         """Leaves if currently connected to a voice channel"""
-        if self.bot.voice_client is not None:
-            await self.bot.voice_client.disconnect(force=True)
-            self.bot.voice_client = None
+        if self.bot.voice_client is None:
+            await self.message.channel.send("Not connected to voice you silly goose🤪")
+            return
+
+        await self.message.channel.send("Leaving voice channel...")
+        await self.bot.voice_client.disconnect(force=True)
+        self.bot.voice_client = None
 
     async def skip(self):
         """Skips current song"""
