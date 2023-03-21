@@ -137,6 +137,10 @@ class CommandHandler:
 
     async def skip(self):
         """Skips current song"""
+        if self.bot.voice_client is None:
+            await self.message.channel.send("Not currently playing a song...")
+            return
+
         if self.bot.voice_client.is_playing():
             self.bot.voice_client.stop()
             self._play_queue()
