@@ -21,8 +21,9 @@ The discord bot has the following features:
 
 
 ## Twitch
-The twitch bot is non functioning at the moment. This is for two main reasons. 1: I accidentally deleted some of the project files 
+The twitch bot is non functioning at the moment, because I accidentally deleted some of the project files 
 (mostly date formatting for logging, but still enough to brick the program unless i change it or add it back).
+To run the bot you would have to set up the sql database and fix that.
 
 The twitch bot consists mostly of global variables and functions looped in a while True loop for running the bot. This bot was one 
 of my first programming projects so its mostly just used for learning programming through different commands.
