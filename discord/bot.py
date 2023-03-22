@@ -31,6 +31,7 @@ class Bot:
             "%leave",
             "%skip",
             "%boobs",
+            "%help",
         ]
         intents = discord.Intents.default()
         intents.message_content = True

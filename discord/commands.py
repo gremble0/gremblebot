@@ -69,6 +69,8 @@ class CommandHandler:
             await self.skip()
         elif message_split[0] == "%boobs":
             await self.boobs()
+        elif message_split[0] == "%help":
+            await self.help()
 
     async def ping(self):
         """Sends pong to channel message was sent from"""
@@ -157,3 +159,12 @@ class CommandHandler:
         response_json = requests.request("GET", url).json()
         rand_index = random.randint(0, len(response_json["videos"]) - 1)
         await self.message.channel.send(response_json["videos"][rand_index]["default_thumb"]["src"])
+
+    async def help(self):
+        """Instructs user with supported commands"""
+        await self.message.channel.send("""
+`%play 'video title'` plays audio through discord voice client\n
+`%skip` skips currently playing audio\n
+`%connect` or `%join` connects to discord voice client\n
+`%leave` leaves discord voice client\n
+        """)
