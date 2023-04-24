@@ -30,7 +30,6 @@ class Bot:
             "%connect",
             "%leave",
             "%skip",
-            "%boobs",
             "%help",
         ]
         intents = discord.Intents.default()
@@ -47,10 +46,10 @@ class Bot:
             now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
             print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
-            self.command_handler.message = message
+            #self.command_handler.message = message
             message_split = message.content.split()
             if message_split[0] in self.commands:
-                await self.command_handler.handle_command()
+                await self.command_handler.handle_command(message)
 
     def run(self) -> None:
         """Runs bot"""

@@ -3,9 +3,6 @@ import ctypes
 import yt_dlp
 import discord
 import os
-import requests
-import random
-
 
 class CommandHandler:
     """
@@ -39,59 +36,54 @@ class CommandHandler:
         leaves current audio channel
     skip():
         skips song currently playing
-    boobs():
-        sends picture of boobs
     """
 
     def __init__(self, bot):
-        self.message = None
         self.bot = bot
         self.playlists = {}
 
-    async def handle_command(self):
+    async def handle_command(self, message):
         """
         Starts coroutine for private method based on the
         content of the message variable
         """
 
-        message_split = self.message.content.split()
+        message_split = message.content.split()
         if message_split[0] == "%ping":
-            await self.ping()
+            await self.ping(message)
         elif message_split[0] == "%stop":
-            await self.stop()
+            await self.stop(message)
         elif message_split[0] == "%play":
-            await self.play()
+            await self.play(message)
         elif message_split[0] == "%join" or message_split[0] == "%connect":
-            await self.connect()
+            await self.connect(message)
         elif message_split[0] == "%leave":
-            await self.leave()
+            await self.leave(message)
         elif message_split[0] == "%skip":
-            await self.skip()
-        elif message_split[0] == "%boobs":
-            await self.boobs()
+            await self.skip(message)
         elif message_split[0] == "%help":
-            await self.help()
+            await self.help(message)
 
-    async def ping(self):
+    async def ping(self, message):
         """Sends pong to channel message was sent from"""
-        await self.message.channel.send("pong!")
+        await message.channel.send("pong!")
 
-    async def stop(self):
+    async def stop(self, message):
         """Stops bot from running"""
-        await self.message.channel.send("Shutting down...")
+        await message.channel.send("Shutting down...")
         await self.bot.client.close()
 
-    async def play(self):
+    async def play(self, message):
         """
         Downloads audio file from youtube based on message content
         Plays audio through discord voice client
         Calls on self._play_queue() after audio is done playing
         """
         discord.opus.load_opus(ctypes.util.find_library("opus"))
-        if len(self.message.content.split()) < 2:
-            self.message.channel.send("Please enter a video title")
+        if len(message.content.split()) < 2:
+            message.channel.send("Please enter a video title")
 
-        search_term = " ".join(self.message.content.split()[1:])
+        search_term = " ".join(message.content.split()[1:])
         ydl_options = {
             "format": "bestaudio",
             "noplaylist": "True",
@@ -102,67 +94,61 @@ class CommandHandler:
         filename = f"{video_info['id']}.webm"
 
         source = await discord.FFmpegOpusAudio.from_probe(filename)
-        if self.message.guild.id in self.playlists:
-            self.playlists[self.message.guild.id].append(source)
+        if message.guild.id in self.playlists:
+            self.playlists[message.guild.id].append(source)
         else:
-            self.playlists[self.message.guild.id] = [source]
+            self.playlists[message.guild.id] = [source]
         # maybe errors if method is slow or if multiple coroutines run
         # the same function at once
-        await self.connect()
-        await self.message.channel.send(f"Added `{video_info['title']} [{video_info['id']}]` to the queue")
+        await self.connect(message)
+        await message.channel.send(f"Added `{video_info['title']} [{video_info['id']}]` to the queue")
 
         if self.bot.voice_client.is_playing():
-            self.playlists[self.message.guild.id].append(source)
+            self.playlists[message.guild.id].append(source)
         else:
-            self.bot.voice_client.play(self.playlists[self.message.guild.id].pop(0),
+            self.bot.voice_client.play(self.playlists[message.guild.id].pop(0),
                                        after=lambda x=None: self._play_queue())
             os.remove(filename)
 
-    def _play_queue(self):
+    async def _play_queue(self, message):
         """Plays songs that are in queue after previous song is done"""
-        if not self.playlists[self.message.guild.id]:
-            self.message.channel.send("No more songs queued. Leaving voice...")
-            self.leave()
+        if not self.playlists[message.guild.id]:
+            await message.channel.send("No more songs queued. Leaving voice...")
+            await self.leave(message)
             return
 
-        source = self.playlists[self.message.guild.id].pop(0)
+        source = self.playlists[message.guild.id].pop(0)
         self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
 
-    async def connect(self):
+    async def connect(self, message):
         """Connects to voice client if not already connected"""
         if self.bot.voice_client is None:
-            self.bot.voice_client = await self.message.author.voice.channel.connect()
+            self.bot.voice_client = await message.author.voice.channel.connect()
 
-    async def leave(self):
+    async def leave(self, message):
         """Leaves if currently connected to a voice channel"""
         if self.bot.voice_client is None:
-            await self.message.channel.send("Not connected to voice you silly goose🤪")
+            await message.channel.send("Not connected to voice you silly goose🤪")
             return
 
-        await self.message.channel.send("Leaving voice channel...")
+        await message.channel.send("Leaving voice channel...")
         await self.bot.voice_client.disconnect(force=True)
         self.bot.voice_client = None
 
-    async def skip(self):
+    async def skip(self, message):
         """Skips current song"""
         if self.bot.voice_client is None:
-            await self.message.channel.send("Not currently playing a song...")
+            await message.channel.send("Not currently playing a song...")
             return
 
         if self.bot.voice_client.is_playing():
             self.bot.voice_client.stop()
-            self._play_queue()
+            await self._play_queue(message)
 
-    async def boobs(self):
-        """Sends nsfw image to current text channel"""
-        url = "https://www.eporner.com/api/v2/video/search/?query=boobs&per_page=1000"
-        response_json = requests.request("GET", url).json()
-        rand_index = random.randint(0, len(response_json["videos"]) - 1)
-        await self.message.channel.send(response_json["videos"][rand_index]["default_thumb"]["src"])
 
-    async def help(self):
+    async def help(self, message):
         """Instructs user with supported commands"""
-        await self.message.channel.send("""
+        await message.channel.send("""
 `%play 'video title'` plays audio through discord voice client\n
 `%skip` skips currently playing audio\n
 `%connect` or `%join` connects to discord voice client\n
