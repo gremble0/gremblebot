@@ -110,23 +110,23 @@ class MessageHandler:
             self.playlists[message.guild.id].append(source)
         else:
             self.voice_client.play(self.playlists[message.guild.id].pop(0),
-                                   after=lambda: self._play_queue(message))
+                                   after=lambda x=message: self._play_queue(x))
             os.remove(filename)
 
         return 0
 
-    async def _play_queue(self, message):
+    def _play_queue(self, message):
         """Plays songs that are in queue after previous song is done"""
-        if not self.playlists[message.guild.id]:
-            await message.channel.send("No more songs queued. Leaving voice...")
-            await self.leave(message)
+        if not self.playlists[message.guild.id] or not self.voice_client:
+            # await message.channel.send("No more songs queued")
+            # await self.leave(message)
             return
 
-        if not self.voice_client:
-            self.voice_client =  await message.author.voice.channel.connect()
+        # if not self.voice_client:
+        #     self.voice_client = await message.author.voice.channel.connect()
 
         source = self.playlists[message.guild.id].pop(0)
-        self.voice_client.play(source, after=lambda: self._play_queue(message))
+        self.voice_client.play(source, after=lambda x=message: self._play_queue(x))
 
     async def connect(self, message):
         """Connects to voice client if not already connected"""
@@ -157,8 +157,9 @@ class MessageHandler:
             return 1
 
         if self.voice_client.is_playing():
+            await message.channel.send("Skipping current song")
             self.voice_client.stop()
-            await self._play_queue(message)
+            self._play_queue(message)
             return 0
 
 
