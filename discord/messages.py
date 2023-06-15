@@ -101,12 +101,12 @@ class MessageHandler:
             self.playlists[message.guild.id] = [source]
         # maybe errors if method is slow or if multiple coroutines run
         # the same function at once
-        await self.connect(message)
         await message.channel.send(f"Added `{video_info['title']} [{video_info['id']}]` to the queue")
 
         if not self.voice_client:
-            await self.connect(message)
-        elif self.voice_client.is_playing():
+            self.voice_client = await message.author.voice.channel.connect()
+
+        if self.voice_client.is_playing():
             self.playlists[message.guild.id].append(source)
         else:
             self.voice_client.play(self.playlists[message.guild.id].pop(0),
@@ -122,13 +122,19 @@ class MessageHandler:
             await self.leave(message)
             return
 
+        if not self.voice_client:
+            self.voice_client =  await message.author.voice.channel.connect()
+
         source = self.playlists[message.guild.id].pop(0)
         self.voice_client.play(source, after=lambda: self._play_queue(message))
 
     async def connect(self, message):
         """Connects to voice client if not already connected"""
         if not self.voice_client:
+            await message.channel.send("Connecting to voice")
             self.voice_client = await message.author.voice.channel.connect()
+        else:
+            await message.channel.send("I'm already connected to voice!")
 
         return 0
 
