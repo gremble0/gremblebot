@@ -2,7 +2,7 @@
 import datetime
 import discord
 import os
-from commands import CommandHandler
+from messages import MessageHandler
 from dotenv import load_dotenv
 
 class Bot:
@@ -22,21 +22,11 @@ class Bot:
     """
 
     def __init__(self):
-        self.commands = [
-            "%ping",
-            "%play",
-            "%stop",
-            "%join",
-            "%connect",
-            "%leave",
-            "%skip",
-            "%help",
-        ]
         intents = discord.Intents.default()
         intents.message_content = True
         self.client = discord.Client(intents=intents)
         self.voice_client = None
-        self.command_handler = CommandHandler(self)
+        self.message_handler = MessageHandler(self.voice_client)
 
         @self.client.event
         async def on_message(message):
@@ -46,10 +36,9 @@ class Bot:
             now = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
             print(f"{now} #{message.channel}, {message.author}: {message.content}")
 
-            #self.command_handler.message = message
-            message_split = message.content.split()
-            if message_split[0] in self.commands:
-                await self.command_handler.handle_command(message)
+            status = await self.message_handler.handle_message(message)
+            if status < 0:
+                await self.client.close()
 
     def run(self) -> None:
         """Runs bot"""
@@ -67,7 +56,6 @@ class Bot:
     #      - add permissions to !stop
     #      - if multiple commands need to download: shorten _play method,
     #        merge _connect and _play_queue into _play and make _download
-
 
 if __name__ == "__main__":
     bot = Bot()

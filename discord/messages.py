@@ -4,7 +4,7 @@ import yt_dlp
 import discord
 import os
 
-class CommandHandler:
+class MessageHandler:
     """
     Class for handling user input containing all the bots commands
 
@@ -38,11 +38,11 @@ class CommandHandler:
         skips song currently playing
     """
 
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, voice_client):
+        self.voice_client = voice_client
         self.playlists = {}
 
-    async def handle_command(self, message):
+    async def handle_message(self, message):
         """
         Starts coroutine for private method based on the
         content of the message variable
@@ -50,28 +50,29 @@ class CommandHandler:
 
         message_split = message.content.split()
         if message_split[0] == "%ping":
-            await self.ping(message)
+            return await self.ping(message)
         elif message_split[0] == "%stop":
-            await self.stop(message)
+            return await self.stop(message)
         elif message_split[0] == "%play":
-            await self.play(message)
+            return await self.play(message)
         elif message_split[0] == "%join" or message_split[0] == "%connect":
-            await self.connect(message)
+            return await self.connect(message)
         elif message_split[0] == "%leave":
-            await self.leave(message)
+            return await self.leave(message)
         elif message_split[0] == "%skip":
-            await self.skip(message)
+            return await self.skip(message)
         elif message_split[0] == "%help":
-            await self.help(message)
+            return await self.help(message)
 
     async def ping(self, message):
         """Sends pong to channel message was sent from"""
         await message.channel.send("pong!")
+        return 0
 
     async def stop(self, message):
         """Stops bot from running"""
         await message.channel.send("Shutting down...")
-        await self.bot.client.close()
+        return -1
 
     async def play(self, message):
         """
@@ -103,12 +104,16 @@ class CommandHandler:
         await self.connect(message)
         await message.channel.send(f"Added `{video_info['title']} [{video_info['id']}]` to the queue")
 
-        if self.bot.voice_client.is_playing():
+        if not self.voice_client:
+            await self.connect(message)
+        elif self.voice_client.is_playing():
             self.playlists[message.guild.id].append(source)
         else:
-            self.bot.voice_client.play(self.playlists[message.guild.id].pop(0),
-                                       after=lambda x=None: self._play_queue())
+            self.voice_client.play(self.playlists[message.guild.id].pop(0),
+                                   after=lambda: self._play_queue(message))
             os.remove(filename)
+
+        return 0
 
     async def _play_queue(self, message):
         """Plays songs that are in queue after previous song is done"""
@@ -118,32 +123,37 @@ class CommandHandler:
             return
 
         source = self.playlists[message.guild.id].pop(0)
-        self.bot.voice_client.play(source, after=lambda x=None: self._play_queue())
+        self.voice_client.play(source, after=lambda: self._play_queue(message))
 
     async def connect(self, message):
         """Connects to voice client if not already connected"""
-        if self.bot.voice_client is None:
-            self.bot.voice_client = await message.author.voice.channel.connect()
+        if not self.voice_client:
+            self.voice_client = await message.author.voice.channel.connect()
+
+        return 0
 
     async def leave(self, message):
         """Leaves if currently connected to a voice channel"""
-        if self.bot.voice_client is None:
+        if self.voice_client is None:
             await message.channel.send("Not connected to voice you silly goose🤪")
-            return
+            return 1
 
         await message.channel.send("Leaving voice channel...")
-        await self.bot.voice_client.disconnect(force=True)
-        self.bot.voice_client = None
+        await self.voice_client.disconnect(force=True)
+        self.voice_client = None
+
+        return 0
 
     async def skip(self, message):
         """Skips current song"""
-        if self.bot.voice_client is None:
+        if self.voice_client is None:
             await message.channel.send("Not currently playing a song...")
-            return
+            return 1
 
-        if self.bot.voice_client.is_playing():
-            self.bot.voice_client.stop()
+        if self.voice_client.is_playing():
+            self.voice_client.stop()
             await self._play_queue(message)
+            return 0
 
 
     async def help(self, message):
@@ -154,3 +164,5 @@ class CommandHandler:
 `%connect` or `%join` connects to discord voice client\n
 `%leave` leaves discord voice client\n
         """)
+
+        return 0
