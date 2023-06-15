@@ -54,8 +54,12 @@ class Bot:
     def run(self) -> None:
         """Runs bot"""
         load_dotenv(".env")
-        DISCORD_TOKEN: str = os.getenv("DISCORD_TOKEN")
-        self.client.run(DISCORD_TOKEN)
+        DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
+        if not DISCORD_TOKEN:
+            print("Couldn't find discord token from .env")
+        else:
+            self.client.run(DISCORD_TOKEN)
 
     # todo:
     #      - remove songs after they have been queued
