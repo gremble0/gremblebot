@@ -1,37 +1,25 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
-#!/bin/sh
 
 # Accidentally deleted the other project files so this is what i have left
 # Also this code is ancient and a lot of it is very bad.
 
 import re
-import site
-import threading
 import requests
-import time
 import random
-import pprint
 import socket
-import subprocess
-from subprocess import Popen
 import sys
-from queue import Queue
-from datetime import date
 import datetime
 import os
 import os.path
 import ast
-import logging
-import math
-import operator as op
-import json
 import wolframalpha
 import mysql.connector
 import pymysql
+from dotenv import load_dotenv
+from subprocess import Popen
 from commands import rtrihard, rkkona, rbanger
 from formatters import time_format, cdate_format
-from secrets import *
 # ------------------------------------------------- Global Variables -----------------------------------------------
 prefix = '='
 admin = 'qremble'
@@ -42,11 +30,14 @@ PORT = 6667
 CHAN = ''
 CHANNELS = ['#gremble','#qremble','#y5or','#duskdarker','#downgrade']
 NICK = "epicswagbot"
+CLIENTID = os.getenv("CLIENTID")
+OAUTH = os.getenv("OAUTH")
 
+load_dotenv(".env")
 HEADERS = {
     'Accept': 'application/vnd.twitchtv.v5+json',
     'Client-ID': CLIENTID,
-    'Authorization': PASS
+    'Authorization': OAUTH
 }
 
 connection = mysql.connector.connect(host = "localhost", user = "root", passwd = "", database = "gremblebot")
@@ -268,7 +259,7 @@ def command_suggest():
 def command_query():
     if get_level(sender) >= 200:
         userinput = message[6:]
-        client = wolframalpha.Client(WOLFRAMALPHAKEY)
+        client = wolframalpha.Client(os.getenv("WOLFRAMALPHAKEY"))
         res = client.query(userinput)
         answer = next(res.results).text
         send_message(CHAN, answer)
@@ -390,7 +381,7 @@ def command_bingo():
         send_message(CHAN, 'Bingo minigame started PogChamp guess the FFZ or BTTV emote, one emote per message.')
         while emote not in get_message(line):
             if get_message(line) == emote:
-                send_message(get_sender(line[0]) + ' got it right PogChamp the emote was ' + emote)
+                send_message(CHAN, get_sender(line[0]) + ' got it right PogChamp the emote was ' + emote)
 
 def command_rkanye():
     url = requests.get('https://api.kanye.rest/')
@@ -463,7 +454,7 @@ def command_setlevel():
 con = socket.socket()
 con.connect((HOST, PORT))
 
-send_pass(PASS)
+send_pass(OAUTH)
 send_nick(NICK)
 for channel in CHANNELS: join_channel(channel)
 
@@ -511,14 +502,6 @@ while True:
                     # insert_into_db(sender)
                     # log_message(CHAN, sender, message)
                     # check_notif(sender)
-
-                    # t1 = threading.Thread(target = insert_into_db(sender))
-                    # t2 = threading.Thread(target = log_message(CHAN, sender, message))
-                    # #t3 = threading.Thread(target = check_notif(sender))
-
-                    # t1.start()
-                    # t2.start()
-                    # #t3.start()
 
                     today = datetime.datetime.today().strftime("%Y/%m/%d %H:%M")
                     print("[{}] {}, {}: {}".format(today, CHAN, sender, message))
