@@ -1,9 +1,9 @@
 """Discord bot written by gremble"""
 import datetime
-import secrets
 import discord
+import os
 from commands import CommandHandler
-
+from dotenv import load_dotenv
 
 class Bot:
     """
@@ -53,7 +53,9 @@ class Bot:
 
     def run(self) -> None:
         """Runs bot"""
-        self.client.run(secrets.DISCORD_TOKEN)
+        load_dotenv(".env")
+        DISCORD_TOKEN: str = os.getenv("DISCORD_TOKEN")
+        self.client.run(DISCORD_TOKEN)
 
     # todo:
     #      - remove songs after they have been queued
