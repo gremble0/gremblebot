@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from os import getenv, remove
 from yt_dlp import YoutubeDL
 
+import re
+
 class Bot:
     def __init__(self) -> None:
         intents = Intents.default()
@@ -42,21 +44,17 @@ class Bot:
             except RuntimeError:
                 await interaction.response.send_message("You're not connected to a voice channel")
 
-            self._download_video(query)
+            audio_source = await self._download_video(query)
+            if interaction.guild_id in self.playlists:
+                self.playlists[interaction.guild_id].append(audio_source)
+            else:
+                self.playlists[interaction.guild_id] = [audio_source]
 
+            await interaction.response.send_message(f"Added `{audio_source.is_opus}`")
             
 
     def _play_queue(self, interaction: Interaction) -> None:
         pass
-
-    def _download_video(self, query: str) -> AudioSource | None:
-        # :dict[str, str | list[dict[str,str]]]
-        video_info: dict[str, str | list[dict[str, str]]] | None = self.ydl.extract_info(f"ytsearch:{query}", download=False)
-
-        if not video_info:
-            raise RuntimeError("YoutubeDL query failed")
-
-        first_video = video_info["entries"][0]
 
     async def _connect(self, interaction: Interaction) -> None:
         """Wrapper function to connect to the voice channel of a users interaction"""
@@ -69,6 +67,20 @@ class Bot:
             raise RuntimeError(f"Member {interaction.user.name} is not connected to a voice channel")
 
         await interaction.user.voice.channel.connect()
+
+    async def _download_video(self, query: str) -> AudioSource:
+        # :dict[str, str | list[dict[str,str]]]
+        # TODO: regex search
+        # re.match("youtube\.com\/watch\?v=.*", query)
+        results = self.ydl.extract_info(f"ytsearch:{query}", download=False)
+
+        if not results:
+            raise RuntimeError("YoutubeDL query failed")
+
+        video_entries: list[str] = results["entries"]
+        first_video: str = video_entries[0]
+
+        return await FFmpegOpusAudio.from_probe(first_video)
                             
     def run(self) -> None:
         load_dotenv(dotenv_path=".env")
