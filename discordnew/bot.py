@@ -3,6 +3,7 @@ from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv, remove
 from yt_dlp import YoutubeDL
+from youtube_search import YoutubeSearch
 
 import re
 
@@ -39,22 +40,28 @@ class Bot:
 
         @self.client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
         async def play(interaction: Interaction, query: str) -> None:
-            try:
-                await self._connect(interaction)
-            except RuntimeError:
-                await interaction.response.send_message("You're not connected to a voice channel")
+            if not self.voice_client:
+                try:
+                    await self._connect(interaction)
+                except RuntimeError:
+                    await interaction.response.send_message("You're not connected to a voice channel")
 
-            audio_source = await self._download_video(query)
+            audio_source: AudioSource = await self._download_video(query)
             if interaction.guild_id in self.playlists:
                 self.playlists[interaction.guild_id].append(audio_source)
             else:
                 self.playlists[interaction.guild_id] = [audio_source]
 
+            self.voice_client.play(source, after=lambda x=interaction: self._play_queue(x))
+
             await interaction.response.send_message(f"Added `{audio_source.is_opus}`")
-            
 
     def _play_queue(self, interaction: Interaction) -> None:
-        pass
+        if not self.playlists[interaction.guild_id] or not self.voice_client:
+            return
+
+        source = self.playlists[interaction.guild_id].pop(0)
+        self.voice_client.play(source, after=lambda x=interaction: self._play_queue(x))
 
     async def _connect(self, interaction: Interaction) -> None:
         """Wrapper function to connect to the voice channel of a users interaction"""
@@ -69,18 +76,17 @@ class Bot:
         await interaction.user.voice.channel.connect()
 
     async def _download_video(self, query: str) -> AudioSource:
-        # :dict[str, str | list[dict[str,str]]]
-        # TODO: regex search
-        # re.match("youtube\.com\/watch\?v=.*", query)
-        results = self.ydl.extract_info(f"ytsearch:{query}", download=False)
+        # TODO: regex search to either install directly from query as url or search first
+        # re.match("https:\/\/www\.youtube\.com\/watch\?v=.*", query)
+        results = self.ydl.extract_info(f"ytsearch:{query}")
 
         if not results:
             raise RuntimeError("YoutubeDL query failed")
 
-        video_entries: list[str] = results["entries"]
-        first_video: str = video_entries[0]
+        first_video= results["entries"][0]
+        filename = f"{first_video['id']}.webm"
 
-        return await FFmpegOpusAudio.from_probe(first_video)
+        return await FFmpegOpusAudio.from_probe(filename)
                             
     def run(self) -> None:
         load_dotenv(dotenv_path=".env")
