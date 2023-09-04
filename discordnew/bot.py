@@ -12,6 +12,11 @@ class Bot:
         self.client: Client = commands.Bot()
         self.voice_client: VoiceClient | None = None
         self.playlists: dict[int, list[AudioSource]] = {}
+        self.ydl: YoutubeDL = YoutubeDL({
+            "format": "bestaudio",
+            "noplaylist": "True",
+            "outtmpl": "%(id)s.%(ext)s"
+        })
 
         @self.client.event
         async def on_ready():
@@ -37,8 +42,21 @@ class Bot:
             except RuntimeError:
                 await interaction.response.send_message("You're not connected to a voice channel")
 
+            self._download_video(query)
+
+            
+
     def _play_queue(self, interaction: Interaction) -> None:
         pass
+
+    def _download_video(self, query: str) -> AudioSource | None:
+        # :dict[str, str | list[dict[str,str]]]
+        video_info: dict[str, str | list[dict[str, str]]] | None = self.ydl.extract_info(f"ytsearch:{query}", download=False)
+
+        if not video_info:
+            raise RuntimeError("YoutubeDL query failed")
+
+        first_video = video_info["entries"][0]
 
     async def _connect(self, interaction: Interaction) -> None:
         """Wrapper function to connect to the voice channel of a users interaction"""
