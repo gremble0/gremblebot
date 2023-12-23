@@ -29,7 +29,6 @@ class Bot:
             if message.author == self.client.user: return
 
             print(f"@{message.guild}#{message.channel}, {message.author}: {message.content}")
-            await self.handle_message(message)
 
         @self.client.slash_command(guild_ids=[978053854878904340], description="pong!")
         async def ping(interaction: Interaction) -> None:
@@ -39,7 +38,8 @@ class Bot:
         async def play(interaction: Interaction, query: str) -> None:
             if not self.voice_client:
                 try:
-                    self.voice_client = await self._connect(interaction)
+                    voice_channel = interaction.user.voice.channel
+                    self.voice_client = await voice_channel.connect()
                 except RuntimeError:
                     await interaction.response.send_message("You're not connected to a voice channel")
                     return
@@ -62,18 +62,6 @@ class Bot:
         source = self.playlists[interaction.guild_id].pop(0)
         self.voice_client.play(source, after=lambda x=interaction: self._play_queue(x))
 
-    async def _connect(self, interaction: Interaction) -> VoiceClient:
-        """Wrapper function to connect to the voice channel of a users interaction"""
-        if not isinstance(interaction.user, Member):
-            raise TypeError(f"Expected type {Member.__class__} but got {interaction.__class__}")
-        if not interaction.user.voice:
-            raise RuntimeError(f"Member {interaction.user.name} is not connected to a voice channel")
-        if not interaction.user.voice.channel:
-            # TODO: find out what voice.channel being None really means
-            raise RuntimeError(f"Member {interaction.user.name} is not connected to a voice channel")
-
-        return await interaction.user.voice.channel.connect()
-
     async def _download_video(self, query: str) -> AudioSource:
         # TODO: regex search to either install directly from query as url or search first
         # re.match("https:\/\/www\.youtube\.com\/watch\?v=.*", query)
@@ -95,9 +83,6 @@ class Bot:
             print("Couldn't find discord token")
         else:
             self.client.run(DISCORD_TOKEN)
-
-    async def handle_message(self, message: Message):
-        pass
 
 
 if __name__ == "__main__":
