@@ -39,19 +39,21 @@ class Bot:
         async def play(interaction: Interaction, query: str) -> None:
             if not self.voice_client:
                 try:
-                    await self._connect(interaction)
+                    self.voice_client = await self._connect(interaction)
                 except RuntimeError:
                     await interaction.response.send_message("You're not connected to a voice channel")
+                    return
 
             audio_source: AudioSource = await self._download_video(query)
+            await interaction.response.send_message(f"Added `{audio_source}` to the queue")
+
             if interaction.guild_id in self.playlists:
                 self.playlists[interaction.guild_id].append(audio_source)
             else:
                 self.playlists[interaction.guild_id] = [audio_source]
 
-            self.voice_client.play(audio_source, after=lambda x=interaction: self._play_queue(x))
-
-            await interaction.response.send_message(f"Added `{audio_source}`")
+            if len(self.playlists[interaction.guild_id]) == 1:
+                self.voice_client.play(audio_source, after=lambda x=interaction: self._play_queue(x))
 
     def _play_queue(self, interaction: Interaction) -> None:
         if not self.playlists[interaction.guild_id] or not self.voice_client:
@@ -60,7 +62,7 @@ class Bot:
         source = self.playlists[interaction.guild_id].pop(0)
         self.voice_client.play(source, after=lambda x=interaction: self._play_queue(x))
 
-    async def _connect(self, interaction: Interaction) -> None:
+    async def _connect(self, interaction: Interaction) -> VoiceClient:
         """Wrapper function to connect to the voice channel of a users interaction"""
         if not isinstance(interaction.user, Member):
             raise TypeError(f"Expected type {Member.__class__} but got {interaction.__class__}")
@@ -70,7 +72,7 @@ class Bot:
             # TODO: find out what voice.channel being None really means
             raise RuntimeError(f"Member {interaction.user.name} is not connected to a voice channel")
 
-        self.voice_client = await interaction.user.voice.channel.connect()
+        return await interaction.user.voice.channel.connect()
 
     async def _download_video(self, query: str) -> AudioSource:
         # TODO: regex search to either install directly from query as url or search first
@@ -80,7 +82,7 @@ class Bot:
         if not results:
             raise RuntimeError("YoutubeDL query failed")
 
-        first_video= results["entries"][0]
+        first_video = results["entries"][0]
         filename = f"{first_video['id']}.webm"
 
         return await FFmpegOpusAudio.from_probe(filename)
@@ -96,7 +98,8 @@ class Bot:
 
     async def handle_message(self, message: Message):
         pass
-            
+
+
 if __name__ == "__main__":
     bot = Bot()
     bot.run()
