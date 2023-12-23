@@ -3,9 +3,6 @@ from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv, remove
 from yt_dlp import YoutubeDL
-from youtube_search import YoutubeSearch
-
-import re
 
 class Bot:
     def __init__(self) -> None:
@@ -52,9 +49,9 @@ class Bot:
             else:
                 self.playlists[interaction.guild_id] = [audio_source]
 
-            self.voice_client.play(source, after=lambda x=interaction: self._play_queue(x))
+            self.voice_client.play(audio_source, after=lambda x=interaction: self._play_queue(x))
 
-            await interaction.response.send_message(f"Added `{audio_source.is_opus}`")
+            await interaction.response.send_message(f"Added `{audio_source}`")
 
     def _play_queue(self, interaction: Interaction) -> None:
         if not self.playlists[interaction.guild_id] or not self.voice_client:
@@ -73,7 +70,7 @@ class Bot:
             # TODO: find out what voice.channel being None really means
             raise RuntimeError(f"Member {interaction.user.name} is not connected to a voice channel")
 
-        await interaction.user.voice.channel.connect()
+        self.voice_client = await interaction.user.voice.channel.connect()
 
     async def _download_video(self, query: str) -> AudioSource:
         # TODO: regex search to either install directly from query as url or search first
