@@ -35,8 +35,11 @@ async def ping(interaction: Interaction) -> None:
 
 @client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
 async def play(interaction: Interaction, query: str) -> None:
-    global voice_clients
-    if not voice_clients:
+    if not interaction.guild_id:
+        await interaction.response.send_message("Play command has to be used in a server")
+        return
+
+    if not interaction.guild_id in voice_clients.keys():
         try:
             voice_clients[interaction.guild_id] = await interaction.user.voice.channel.connect()
         except RuntimeError:
