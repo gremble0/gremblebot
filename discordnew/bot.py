@@ -8,7 +8,8 @@ intents = Intents.default()
 intents.message_content = True
 
 client: Client = commands.Bot()
-voice_clients: VoiceClient | None = None # TODO: voice_client: dict[int, VoiceClient] = {}
+# TODO: class Server?
+voice_clients: dict[int, VoiceClient] = {}
 playlists: dict[int, list[AudioSource]] = {}
 ydl: YoutubeDL = YoutubeDL({
     "format": "bestaudio",
@@ -34,16 +35,16 @@ async def ping(interaction: Interaction) -> None:
 
 @client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
 async def play(interaction: Interaction, query: str) -> None:
+    global voice_clients
     if not voice_clients:
         try:
-            # voice_channel = interaction.user.voice.channel
-            voice_client = await interaction.user.voice.channel.connect()
+            voice_clients[interaction.guild_id] = await interaction.user.voice.channel.connect()
         except RuntimeError:
             await interaction.response.send_message("You're not connected to a voice channel")
             return
 
     audio_source: AudioSource = await _download_video(query)
-    # await interaction.response.send_message(f"Added `{audio_source}` to the queue")
+    await interaction.response.send_message(f"Added `{audio_source}` to the queue")
 
     if interaction.guild_id in playlists:
         playlists[interaction.guild_id].append(audio_source)
@@ -51,14 +52,22 @@ async def play(interaction: Interaction, query: str) -> None:
         playlists[interaction.guild_id] = [audio_source]
 
     if len(playlists[interaction.guild_id]) == 1:
-        voice_client.play(audio_source, after=lambda x=interaction: _play_queue(x))
+        voice_clients[interaction.guild_id].play(audio_source, after=lambda x=interaction: _play_queue(x))
 
 def _play_queue(interaction: Interaction) -> None:
-    if not playlists[interaction.guild_id] or not voice_client:
+    if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
         return
 
     source = playlists[interaction.guild_id].pop(0)
-    voice_client.play(source, after=lambda x=interaction: _play_queue(x))
+    voice_clients[interaction.guild_id].play(source, after=lambda x=interaction: _play_queue(x))
+
+@client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
+async def skip(interaction: Interaction) -> None:
+    #TODO: error messages and None ?
+    if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
+        await interaction.response.send_message("")
+
+    voice_clients[interaction.guild_id].stop()
 
 async def _download_video(query: str) -> AudioSource:
     # TODO: regex search to either install directly from query as url or search first
