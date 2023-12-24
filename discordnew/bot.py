@@ -55,22 +55,43 @@ async def play(interaction: Interaction, query: str) -> None:
         playlists[interaction.guild_id] = [audio_source]
 
     if len(playlists[interaction.guild_id]) == 1:
-        voice_clients[interaction.guild_id].play(audio_source, after=lambda x=interaction: _play_queue(x))
+        voice_clients[interaction.guild_id].play(
+            audio_source,
+            after=lambda x=interaction.guild_id: play_queue(x)
+        )
 
-def _play_queue(interaction: Interaction) -> None:
-    if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
+def play_queue(guild_id: int) -> None:
+    """
+    Recursively continues the playlist in the given server until the playlist
+    in that server is empty.
+    """
+    if not guild_id in playlists:
         return
 
-    source = playlists[interaction.guild_id].pop(0)
-    voice_clients[interaction.guild_id].play(source, after=lambda x=interaction: _play_queue(x))
+    source = playlists[guild_id].pop(0)
+    voice_clients[guild_id].play(source, after=lambda x=guild_id: play_queue(x))
+    # if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
+    #     return
+    #
+    # source = playlists[interaction.guild_id].pop(0)
+    # voice_clients[interaction.guild_id].play(source, after=lambda x=interaction: _play_queue(x))
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
 async def skip(interaction: Interaction) -> None:
-    #TODO: error messages and None ?
-    if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
-        await interaction.response.send_message("")
+    if not interaction.guild_id:
+        await interaction.response.send_message("Skip command has to be used in a server")
+        return
+
+    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
+        await interaction.response.send_message("Queue is empty, nothing to skip")
+        return
 
     voice_clients[interaction.guild_id].stop()
+    play_queue(interaction.guild_id)
+
+@client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
+async def queue(interaction: Interaction) -> None:
+    pass
 
 async def _download_video(query: str) -> AudioSource:
     # TODO: regex search to either install directly from query as url or search first
