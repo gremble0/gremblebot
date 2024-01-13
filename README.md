@@ -4,9 +4,7 @@ This is the repo for gremblebot, a chatbot written in python implemented on two 
 The bots features on each platform are very different. I will give an explanation of each of them.
 
 ## Discord
-The discord bot is mostly focused on playing audio through discords voice client. 
-This bot is ran through 2 classes, with an object oriented architecture.`bot.py` the main class for running the bot
-and `commands.py` the class used for handling commands. Each class consists of a pointer to an object of the other class.
+The discord bot is mostly focused on playing audio through discords voice client. It has 2 versions, the old one `discordold/` is ran through 2 classes, with an object oriented architecture. `bot.py` the main class for running the bot and `messages.py` the class used for handling commands through messages. The newer version under `discordnew/` is partly a refactor after i realized the object oriented nature of its architecture was unnecessarily constraining combined with a migration to discords new api `nextcord`.
 
 The discord bot has the following features:
 - Connection to discord using discords python library.
@@ -17,7 +15,6 @@ The discord bot has the following features:
     - Automatically disconnect from the voice client once the queue is empty.
     - Skip song on user input.
     - Leave voice channel on user input.
-- Object oriented architecture
 
 
 ## Twitch
