@@ -41,9 +41,6 @@ async def play(interaction: Interaction, query: str) -> None:
     """
     Download media from youtube based on query and add it to the queue
     of songs for the server.
-
-    Parameters:
-        - query: The query that will be searched for on YouTube. The first result for this query will be downloaded and added to the queue
     """
     if not interaction.guild_id:
         await interaction.response.send_message("Play command has to be used in a server")

@@ -17,6 +17,15 @@ class Media:
 
 
 async def download_media(query: str) -> Media:
+    """
+    Download media from youtube based on query
+
+    Parameters:
+        - query: The query that will be searched for on YouTube. The first result for this query will be downloaded and added to the queue
+
+    Returns:
+        Media object containing an AudioSource of the downloaded media and the title of the youtube video
+    """
     # TODO: regex search to either install directly from query as url or search first
     # re.match("https:\/\/www\.youtube\.com\/watch\?v=.*", query)
     results = ydl.extract_info(f"ytsearch:{query}")
