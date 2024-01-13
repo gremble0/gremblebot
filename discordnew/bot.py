@@ -99,8 +99,49 @@ async def skip(interaction: Interaction) -> None:
 
     voice_clients[interaction.guild_id].stop()
     play_queue(interaction.guild_id)
-    await interaction.response.send_message("Skipped the currently playing audio") # TODO: get name of currently playing audio
+    await interaction.response.send_message(f"Skipped `{playlists[interaction.guild_id][0].title}`")
 
+
+@client.slash_command(guild_ids=[978053854878904340], description="Pause the currently playing audio")
+async def pause(interaction: Interaction) -> None:
+    """
+    Pause the currently playing audio
+    """
+    if not interaction.guild_id:
+        await interaction.response.send_message("Pause command has to be used in a server")
+        return
+
+    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
+        await interaction.response.send_message("Queue is empty, nothing to pause")
+        return
+
+    if not voice_clients[interaction.guild_id].is_playing():
+        await interaction.response.send_message("Already paused")
+        return
+
+    voice_clients[interaction.guild_id].pause()
+    await interaction.response.send_message(f"Paused `{playlists[interaction.guild_id][0].title}`")
+
+
+@client.slash_command(guild_ids=[978053854878904340], description="Resume playing paused audio")
+async def resume(interaction: Interaction) -> None:
+    """
+    Resume playing paused audio
+    """
+    if not interaction.guild_id:
+        await interaction.response.send_message("Pause command has to be used in a server")
+        return
+
+    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
+        await interaction.response.send_message("Queue is empty, nothing to resume")
+        return
+
+    if voice_clients[interaction.guild_id].is_playing():
+        await interaction.response.send_message("Already playing audio")
+        return
+
+    voice_clients[interaction.guild_id].resume()
+    await interaction.response.send_message(f"Resumed `{playlists[interaction.guild_id][0].title}`")
 
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
