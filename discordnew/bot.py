@@ -19,6 +19,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message: Message) -> None:
+    """
+    Prints debugging information when the client reads a message
+    """
     if message.author == client.user:
         return
 
@@ -27,11 +30,21 @@ async def on_message(message: Message) -> None:
 
 @client.slash_command(guild_ids=[978053854878904340], description="pong!")
 async def ping(interaction: Interaction) -> None:
+    """
+    Check if the bot is active
+    """
     await interaction.response.send_message("pong!")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
 async def play(interaction: Interaction, query: str) -> None:
+    """
+    Download media from youtube based on query and add it to the queue
+    of songs for the server.
+
+    Parameters:
+        - query: The query that will be searched for on YouTube. The first result for this query will be downloaded and added to the queue
+    """
     if not interaction.guild_id:
         await interaction.response.send_message("Play command has to be used in a server")
         return
@@ -75,6 +88,10 @@ def play_queue(guild_id: int) -> None:
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
 async def skip(interaction: Interaction) -> None:
+    """
+    Skips the currently playing song and plays the next one in queue if the
+    queue is not empty
+    """
     if not interaction.guild_id:
         await interaction.response.send_message("Skip command has to be used in a server")
         return
@@ -90,6 +107,9 @@ async def skip(interaction: Interaction) -> None:
 
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
+    """
+    Gets the current queue of media
+    """
     if not interaction.guild_id:
         await interaction.response.send_message("Queue command has to be used in a server")
         return
