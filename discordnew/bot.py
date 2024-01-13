@@ -1,27 +1,14 @@
-from dataclasses import dataclass
-from nextcord import Interaction, Intents, Client, VoiceClient, Message, FFmpegOpusAudio, AudioSource
+from nextcord import Interaction, Client, VoiceClient, Message
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
-from yt_dlp import YoutubeDL
+from media import Media, download_media
 
-intents = Intents.default()
-intents.message_content = True
-
-@dataclass
-class Media:
-    audio_source: AudioSource
-    title: str
 
 client: Client = commands.Bot()
-# TODO: class Server?
 voice_clients: dict[int, VoiceClient] = {}
 playlists: dict[int, list[Media]] = {}
-ydl: YoutubeDL = YoutubeDL({
-    "format": "bestaudio",
-    "noplaylist": "True",
-    "outtmpl": "%(id)s.%(ext)s"
-})
+
 
 @client.event
 async def on_ready():
@@ -29,15 +16,19 @@ async def on_ready():
     print("gremblebot is now ready to use!")
     print("-------------------------------")
 
+
 @client.event
 async def on_message(message: Message) -> None:
-    if message.author == client.user: return
+    if message.author == client.user:
+        return
 
     print(f"@{message.guild}#{message.channel}, {message.author}: {message.content}")
+
 
 @client.slash_command(guild_ids=[978053854878904340], description="pong!")
 async def ping(interaction: Interaction) -> None:
     await interaction.response.send_message("pong!")
+
 
 @client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
 async def play(interaction: Interaction, query: str) -> None:
@@ -52,9 +43,11 @@ async def play(interaction: Interaction, query: str) -> None:
             await interaction.response.send_message("You're not connected to a voice channel")
             return
 
-    # audio_source: AudioSource = await _download_video(query)
-    media = await _download_video(query)
-    await interaction.response.send_message(f"Added `{media.title}` to the queue")
+    # Using interaction more than 3 seconds after instantiation results in error
+    # so we need to defer it in case media download takes more than that
+    await interaction.response.defer()
+    media = await download_media(query)
+    await interaction.followup.send(f"Added `{media.title}` to the queue")
 
     if interaction.guild_id in playlists:
         playlists[interaction.guild_id].append(media)
@@ -67,6 +60,7 @@ async def play(interaction: Interaction, query: str) -> None:
             after=lambda x=interaction.guild_id: play_queue(x)
         )
 
+
 def play_queue(guild_id: int) -> None:
     """
     Recursively continues the playlist in the given server until the playlist
@@ -77,6 +71,7 @@ def play_queue(guild_id: int) -> None:
 
     media = playlists[guild_id].pop(0)
     voice_clients[guild_id].play(media.audio_source, after=lambda x=guild_id: play_queue(x))
+
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
 async def skip(interaction: Interaction) -> None:
@@ -91,6 +86,7 @@ async def skip(interaction: Interaction) -> None:
     voice_clients[interaction.guild_id].stop()
     play_queue(interaction.guild_id)
     await interaction.response.send_message("Skipped the currently playing audio") # TODO: get name of currently playing audio
+
 
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
@@ -109,21 +105,8 @@ async def queue(interaction: Interaction) -> None:
         i = i + 1
 
     await interaction.response.send_message(outstr)
-
-
-async def _download_video(query: str) -> Media:
-    # TODO: regex search to either install directly from query as url or search first
-    # re.match("https:\/\/www\.youtube\.com\/watch\?v=.*", query)
-    results = ydl.extract_info(f"ytsearch:{query}")
-
-    if not results:
-        raise RuntimeError("YoutubeDL query failed")
-
-    first_video = results["entries"][0]
-    filename = f"{first_video['id']}.webm"
-
-    return Media(await FFmpegOpusAudio.from_probe(filename), first_video["title"])
                         
+
 def main() -> None:
     load_dotenv(dotenv_path=".env")
     DISCORD_TOKEN: str | None = getenv("DISCORD_TOKEN")
