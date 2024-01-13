@@ -70,11 +70,6 @@ def play_queue(guild_id: int) -> None:
 
     source = playlists[guild_id].pop(0)
     voice_clients[guild_id].play(source, after=lambda x=guild_id: play_queue(x))
-    # if not playlists[interaction.guild_id] or not voice_clients[interaction.guild_id]:
-    #     return
-    #
-    # source = playlists[interaction.guild_id].pop(0)
-    # voice_clients[interaction.guild_id].play(source, after=lambda x=interaction: _play_queue(x))
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
 async def skip(interaction: Interaction) -> None:
@@ -88,10 +83,27 @@ async def skip(interaction: Interaction) -> None:
 
     voice_clients[interaction.guild_id].stop()
     play_queue(interaction.guild_id)
+    await interaction.response.send_message("Skipped the currently playing audio") # TODO: get name of currently playing audio
 
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
-    pass
+    if not interaction.guild_id:
+        await interaction.response.send_message("Queue command has to be used in a server")
+        return
+
+    if interaction.guild_id not in playlists:
+        await interaction.response.send_message("Queue is empty")
+        return
+
+    outstr = ""
+    i = 1
+    for song in playlists[interaction.guild_id]:
+        # outstr += str(i) + str(song) + "\n"
+        outstr += f"{i}: {song} \n"
+        i = i + 1
+
+    await interaction.response.send_message(outstr)
+
 
 async def _download_video(query: str) -> AudioSource:
     # TODO: regex search to either install directly from query as url or search first
