@@ -78,7 +78,8 @@ async def play_queue(interaction: Interaction) -> None:
 
     if len(playlists[interaction.guild_id]) > 0:
         media = playlists[interaction.guild_id].pop(0)
-        voice_clients[interaction.guild_id].play(media.audio_source, after=lambda _: play_queue(interaction))
+        voice_clients[interaction.guild_id].play(media.audio_source,
+                                                 after=lambda _: play_queue(interaction))
         await interaction.followup.send(f"Now playing `{media.title}`")
 
 
@@ -92,14 +93,16 @@ async def skip(interaction: Interaction) -> None:
         await interaction.response.send_message("Skip command has to be used in a server")
         return
 
-    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
-        await interaction.response.send_message("Queue is empty, nothing to skip")
+    if interaction.guild_id not in playlists:
+        await interaction.response.send_message("Nothing to skip")
+        return
+
+    if not (voice_clients[interaction.guild_id].is_paused() or voice_clients[interaction.guild_id].is_playing()):
+        await interaction.response.send_message("Not playing any audio")
         return
 
     voice_clients[interaction.guild_id].stop()
-    await interaction.response.defer()
-    await play_queue(interaction)
-    await interaction.followup.send(f"Skipped `{playlists[interaction.guild_id][0].title}`")
+    await interaction.response.send_message(f"Skipped currently playing audio")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Pause the currently playing audio")
@@ -111,16 +114,16 @@ async def pause(interaction: Interaction) -> None:
         await interaction.response.send_message("Pause command has to be used in a server")
         return
 
-    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
-        await interaction.response.send_message("Queue is empty, nothing to pause")
+    if interaction.guild_id not in playlists:
+        await interaction.response.send_message("Nothing to pause")
         return
 
-    if not voice_clients[interaction.guild_id].is_playing():
+    if voice_clients[interaction.guild_id].is_paused():
         await interaction.response.send_message("Already paused")
         return
 
     voice_clients[interaction.guild_id].pause()
-    await interaction.response.send_message(f"Paused `{playlists[interaction.guild_id][0].title}`")
+    await interaction.response.send_message(f"Paused currently playing audio")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Resume playing paused audio")
@@ -132,8 +135,8 @@ async def resume(interaction: Interaction) -> None:
         await interaction.response.send_message("Pause command has to be used in a server")
         return
 
-    if not interaction.guild_id in playlists or not playlists[interaction.guild_id]:
-        await interaction.response.send_message("Queue is empty, nothing to resume")
+    if interaction.guild_id not in playlists:
+        await interaction.response.send_message("Nothing to resume")
         return
 
     if voice_clients[interaction.guild_id].is_playing():
@@ -141,7 +144,7 @@ async def resume(interaction: Interaction) -> None:
         return
 
     voice_clients[interaction.guild_id].resume()
-    await interaction.response.send_message(f"Resumed `{playlists[interaction.guild_id][0].title}`")
+    await interaction.response.send_message(f"Resumed currently playing audio")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
