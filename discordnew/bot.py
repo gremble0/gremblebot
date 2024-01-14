@@ -65,20 +65,22 @@ async def play(interaction: Interaction, query: str) -> None:
         playlists[interaction.guild_id] = [media]
 
     if len(playlists[interaction.guild_id]) == 1:
-        voice_clients[interaction.guild_id].play(media.audio_source, after=play_queue)
+        voice_clients[interaction.guild_id].play(media.audio_source, after=lambda _: play_queue(interaction))
 
 
-def play_queue(guild_id: int) -> None:
+async def play_queue(interaction: Interaction) -> None:
     """
     Recursively continues the playlist in the given server until the playlist
     in that server is empty.
     """
-    print(playlists, "\n", guild_id)
-    if not guild_id in playlists:
+    if not interaction.guild_id in playlists:
         return
 
-    media = playlists[guild_id].pop(0)
-    voice_clients[guild_id].play(media.audio_source, after=play_queue)
+    media = playlists[interaction.guild_id].pop(0)
+
+    if len(playlists[interaction.guild_id]) > 0:
+        voice_clients[interaction.guild_id].play(media.audio_source, after=lambda _: play_queue(interaction))
+        await interaction.followup.send(f"Now playing `{media.title}`")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
@@ -96,8 +98,9 @@ async def skip(interaction: Interaction) -> None:
         return
 
     voice_clients[interaction.guild_id].stop()
-    play_queue(interaction.guild_id)
-    await interaction.response.send_message(f"Skipped `{playlists[interaction.guild_id][0].title}`")
+    await interaction.response.defer()
+    await play_queue(interaction)
+    await interaction.followup.send(f"Skipped `{playlists[interaction.guild_id][0].title}`")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Pause the currently playing audio")
