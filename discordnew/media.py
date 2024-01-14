@@ -11,12 +11,12 @@ ydl: YoutubeDL = YoutubeDL({
 
 
 @dataclass
-class Media:
-    audio_source: AudioSource
+class Audio:
+    source: AudioSource
     title: str
 
 
-async def download_media(query: str) -> Media:
+async def download_media(query: str) -> Audio:
     """
     Download media from youtube based on query
 
@@ -36,4 +36,4 @@ async def download_media(query: str) -> Media:
     first_video = results["entries"][0]
     filename = f"{first_video['id']}.webm"
 
-    return Media(await FFmpegOpusAudio.from_probe(filename), first_video["title"])
+    return Audio(await FFmpegOpusAudio.from_probe(filename), first_video["title"])

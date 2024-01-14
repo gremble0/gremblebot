@@ -1,13 +1,13 @@
-from nextcord import Interaction, Client, VoiceClient, Message
+from nextcord import Interaction, Client, VoiceClient
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
-from media import Media, download_media
+from media import Audio, download_media
 
 
 client: Client = commands.Bot()
 voice_clients: dict[int, VoiceClient] = {}
-playlists: dict[int, list[Media]] = {}
+playlists: dict[int, list[Audio]] = {}
 
 
 @client.event
@@ -15,17 +15,6 @@ async def on_ready():
     print("-------------------------------")
     print("gremblebot is now ready to use!")
     print("-------------------------------")
-
-
-@client.event
-async def on_message(message: Message) -> None:
-    """
-    Prints debugging information when the client reads a message
-    """
-    if message.author == client.user:
-        return
-
-    print(f"@{message.guild}#{message.channel}, {message.author}: {message.content}")
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="pong!")
@@ -78,7 +67,7 @@ async def play_queue(interaction: Interaction) -> None:
 
     if len(playlists[interaction.guild_id]) > 0:
         media = playlists[interaction.guild_id].pop(0)
-        voice_clients[interaction.guild_id].play(media.audio_source,
+        voice_clients[interaction.guild_id].play(media.source,
                                                  after=lambda _: play_queue(interaction))
         await interaction.followup.send(f"Now playing `{media.title}`")
 
@@ -163,7 +152,7 @@ async def queue(interaction: Interaction) -> None:
     outstr = ""
     i = 1
     for song in playlists[interaction.guild_id]:
-        outstr += f"{i}: {song.title} \n"
+        outstr += f"{i}: {song.title}\n"
         i = i + 1
 
     await interaction.response.send_message(outstr)
