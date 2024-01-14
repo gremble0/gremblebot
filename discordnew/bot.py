@@ -64,8 +64,8 @@ async def play(interaction: Interaction, query: str) -> None:
     else:
         playlists[interaction.guild_id] = [media]
 
-    if len(playlists[interaction.guild_id]) == 1:
-        voice_clients[interaction.guild_id].play(media.audio_source, after=lambda _: play_queue(interaction))
+    if not voice_clients[interaction.guild_id].is_playing():
+        await play_queue(interaction)
 
 
 async def play_queue(interaction: Interaction) -> None:
@@ -76,9 +76,8 @@ async def play_queue(interaction: Interaction) -> None:
     if not interaction.guild_id in playlists:
         return
 
-    media = playlists[interaction.guild_id].pop(0)
-
     if len(playlists[interaction.guild_id]) > 0:
+        media = playlists[interaction.guild_id].pop(0)
         voice_clients[interaction.guild_id].play(media.audio_source, after=lambda _: play_queue(interaction))
         await interaction.followup.send(f"Now playing `{media.title}`")
 
@@ -154,7 +153,7 @@ async def queue(interaction: Interaction) -> None:
         await interaction.response.send_message("Queue command has to be used in a server")
         return
 
-    if interaction.guild_id not in playlists:
+    if interaction.guild_id not in playlists or len(playlists[interaction.guild_id]) == 0:
         await interaction.response.send_message("Queue is empty")
         return
 
