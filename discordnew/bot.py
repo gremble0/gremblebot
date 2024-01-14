@@ -65,10 +65,7 @@ async def play(interaction: Interaction, query: str) -> None:
         playlists[interaction.guild_id] = [media]
 
     if len(playlists[interaction.guild_id]) == 1:
-        voice_clients[interaction.guild_id].play(
-            media.audio_source,
-            after=lambda x=interaction.guild_id: play_queue(x)
-        )
+        voice_clients[interaction.guild_id].play(media.audio_source, after=play_queue)
 
 
 def play_queue(guild_id: int) -> None:
@@ -76,11 +73,12 @@ def play_queue(guild_id: int) -> None:
     Recursively continues the playlist in the given server until the playlist
     in that server is empty.
     """
+    print(playlists, "\n", guild_id)
     if not guild_id in playlists:
         return
 
     media = playlists[guild_id].pop(0)
-    voice_clients[guild_id].play(media.audio_source, after=lambda x=guild_id: play_queue(x))
+    voice_clients[guild_id].play(media.audio_source, after=play_queue)
 
 
 @client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
@@ -143,6 +141,7 @@ async def resume(interaction: Interaction) -> None:
     voice_clients[interaction.guild_id].resume()
     await interaction.response.send_message(f"Resumed `{playlists[interaction.guild_id][0].title}`")
 
+
 @client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
     """
@@ -173,6 +172,7 @@ def main() -> None:
         print("Couldn't find discord token")
     else:
         client.run(DISCORD_TOKEN)
+
 
 if __name__ == "__main__":
     main()
