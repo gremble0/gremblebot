@@ -1,13 +1,7 @@
 from nextcord import AudioSource, FFmpegOpusAudio
 from dataclasses import dataclass
 from yt_dlp import YoutubeDL
-
-
-ydl = YoutubeDL({
-    "format": "bestaudio",
-    "noplaylist": "True",
-    "outtmpl": "%(id)s.%(ext)s"
-})
+from pathlib import Path
 
 
 @dataclass
@@ -17,7 +11,7 @@ class Audio:
     url: str
 
 
-async def download_audio(query: str) -> Audio:
+async def download_audio(query: str, path: Path | str) -> Audio:
     """
     Download media from youtube based on query
 
@@ -27,6 +21,12 @@ async def download_audio(query: str) -> Audio:
     Returns:
         Media object containing an AudioSource of the downloaded media and the title of the youtube video
     """
+    ydl = YoutubeDL({
+        "format": "bestaudio",
+        "noplaylist": "True",
+        "outtmpl": f"{path}/%(id)s.%(ext)s"
+    })
+
     # TODO: regex search to either install directly from query as url or search first
     # re.match("https:\/\/www\.youtube\.com\/watch\?v=.*", query)
     results = ydl.extract_info(f"ytsearch:{query}")
@@ -35,9 +35,7 @@ async def download_audio(query: str) -> Audio:
         raise RuntimeError("YoutubeDL query failed")
 
     first_video = results["entries"][0]
-    filename = f"{first_video['id']}.webm"
+    filename = f"{path}/{first_video['id']}.webm"
     url = "https://www.youtube.com/watch?v=" + first_video["id"]
-
-    print(first_video)
 
     return Audio(await FFmpegOpusAudio.from_probe(filename), first_video["title"], url)

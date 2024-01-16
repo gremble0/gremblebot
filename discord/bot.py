@@ -45,7 +45,7 @@ async def play(interaction: Interaction, query: str) -> None:
     # Using interaction more than 3 seconds after instantiation results in error
     # so we need to defer it in case media download takes more than that
     await interaction.response.defer()
-    audio = await download_audio(query)
+    audio = await download_audio(query, "media")
     await interaction.followup.send(f"Added `{audio.title}` - {audio.url} to the queue")
 
     if interaction.guild_id in playlists:
@@ -156,7 +156,7 @@ async def queue(interaction: Interaction) -> None:
         i = i + 1
 
     await interaction.response.send_message(outstr)
-                        
+
 
 def main() -> None:
     load_dotenv(dotenv_path=".env")
