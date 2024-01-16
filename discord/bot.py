@@ -2,7 +2,7 @@ from nextcord import Interaction, Client, VoiceClient
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
-from media import Audio, download_media
+from audio import Audio, download_audio
 
 
 client: Client = commands.Bot()
@@ -45,13 +45,13 @@ async def play(interaction: Interaction, query: str) -> None:
     # Using interaction more than 3 seconds after instantiation results in error
     # so we need to defer it in case media download takes more than that
     await interaction.response.defer()
-    media = await download_media(query)
-    await interaction.followup.send(f"Added `{media.title}` to the queue")
+    audio = await download_audio(query)
+    await interaction.followup.send(f"Added `{audio.title}` - {audio.url} to the queue")
 
     if interaction.guild_id in playlists:
-        playlists[interaction.guild_id].append(media)
+        playlists[interaction.guild_id].append(audio)
     else:
-        playlists[interaction.guild_id] = [media]
+        playlists[interaction.guild_id] = [audio]
 
     if not voice_clients[interaction.guild_id].is_playing():
         await play_queue(interaction)
