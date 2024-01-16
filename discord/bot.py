@@ -1,23 +1,23 @@
-from nextcord import Interaction, Client, VoiceClient
+from nextcord import Interaction, VoiceClient
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
 from audio import Audio, download_audio
 
 
-client: Client = commands.Bot()
+bot = commands.Bot()
 voice_clients: dict[int, VoiceClient] = {}
 playlists: dict[int, list[Audio]] = {}
 
 
-@client.event
+@bot.event
 async def on_ready():
     print("-------------------------------")
     print("gremblebot is now ready to use!")
     print("-------------------------------")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="pong!")
+@bot.slash_command(guild_ids=[978053854878904340], description="pong!")
 async def ping(interaction: Interaction) -> None:
     """
     Check if the bot is active
@@ -25,7 +25,7 @@ async def ping(interaction: Interaction) -> None:
     await interaction.response.send_message("pong!")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
+@bot.slash_command(guild_ids=[978053854878904340], description="Play audio from a youtube video")
 async def play(interaction: Interaction, query: str) -> None:
     """
     Download media from youtube based on query and add it to the queue
@@ -72,7 +72,7 @@ async def play_queue(interaction: Interaction) -> None:
         await interaction.followup.send(f"Now playing `{media.title}`")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
+@bot.slash_command(guild_ids=[978053854878904340], description="Skip the currently playing audio")
 async def skip(interaction: Interaction) -> None:
     """
     Skips the currently playing song and plays the next one in queue if the
@@ -94,7 +94,7 @@ async def skip(interaction: Interaction) -> None:
     await interaction.response.send_message(f"Skipped currently playing audio")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="Pause the currently playing audio")
+@bot.slash_command(guild_ids=[978053854878904340], description="Pause the currently playing audio")
 async def pause(interaction: Interaction) -> None:
     """
     Pause the currently playing audio
@@ -115,7 +115,7 @@ async def pause(interaction: Interaction) -> None:
     await interaction.response.send_message(f"Paused currently playing audio")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="Resume playing paused audio")
+@bot.slash_command(guild_ids=[978053854878904340], description="Resume playing paused audio")
 async def resume(interaction: Interaction) -> None:
     """
     Resume playing paused audio
@@ -136,7 +136,7 @@ async def resume(interaction: Interaction) -> None:
     await interaction.response.send_message(f"Resumed currently playing audio")
 
 
-@client.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
+@bot.slash_command(guild_ids=[978053854878904340], description="Get the current queue of songs")
 async def queue(interaction: Interaction) -> None:
     """
     Gets the current queue of media
@@ -165,7 +165,7 @@ def main() -> None:
     if not DISCORD_TOKEN:
         print("Couldn't find discord token")
     else:
-        client.run(DISCORD_TOKEN)
+        bot.run(DISCORD_TOKEN)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from yt_dlp import YoutubeDL
 
 
-ydl: YoutubeDL = YoutubeDL({
+ydl = YoutubeDL({
     "format": "bestaudio",
     "noplaylist": "True",
     "outtmpl": "%(id)s.%(ext)s"
@@ -22,7 +22,7 @@ async def download_audio(query: str) -> Audio:
     Download media from youtube based on query
 
     Parameters:
-        - query: The query that will be searched for on YouTube. The first result for this query will be downloaded and added to the queue
+        - query: The query that will be searched for on YouTube. The first result for this query will be downloaded
 
     Returns:
         Media object containing an AudioSource of the downloaded media and the title of the youtube video
