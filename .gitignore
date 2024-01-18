@@ -1,12 +1,5 @@
-# Vim temp files
-*.swp
-*.swo
-
-# Python class files and cache
+*.env
 *.pyc
 *$py.class
 __pycache__/
-
-# Project specific
-secrets.py
-*.webm
+media/
