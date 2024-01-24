@@ -8,14 +8,12 @@ The discord bot is mostly focused on playing audio through discords voice client
 
 The discord bot has the following features:
 - Connection to discord using discords python library.
-- Coroutines started for each command.
 - Play audio through the discord client. This feature includes:
     - Download songs based on user input.
     - Queue up songs that automatically play after the previous one finishes.
     - Automatically disconnect from the voice client once the queue is empty.
     - Skip song on user input.
     - Leave voice channel on user input.
-
 
 ## Twitch
 The twitch bot is non functioning at the moment, because I accidentally deleted some of the project files 
